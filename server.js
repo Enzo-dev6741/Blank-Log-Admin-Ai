@@ -8,90 +8,81 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('.'));
 
-let browser = null;
-let page = null;
-
 // TikTok Extraction
-app.post('/api/extract/tiktok', async (req, res) => {
+app.post('/api/tiktok', async (req, res) => {
     const { email, password } = req.body;
+    let browser;
     
     try {
-        console.log('Launching browser for TikTok...');
-        browser = await puppeteer.launch({ 
-            headless: false,
+        console.log('Starting TikTok extraction...');
+        
+        browser = await puppeteer.launch({
+            headless: 'new',
             args: ['--no-sandbox', '--disable-setuid-sandbox']
         });
-        page = await browser.newPage();
         
-        console.log('Navigating to TikTok Developer...');
-        await page.goto('https://developers.tiktok.com', { waitUntil: 'networkidle2' });
+        const page = await browser.newPage();
         
+        // Go to TikTok developer
+        await page.goto('https://developers.tiktok.com/apps');
         await page.waitForTimeout(2000);
         
-        // Click login button
+        // Click login
         const loginBtn = await page.$('a[href*="login"]');
         if (loginBtn) await loginBtn.click();
-        
         await page.waitForTimeout(2000);
         
         // Enter credentials
-        await page.waitForSelector('input[type="email"], input[name="email"]', { timeout: 10000 });
-        await page.type('input[type="email"], input[name="email"]', email);
-        await page.type('input[type="password"], input[name="password"]', password);
+        await page.type('input[name="email"], input[type="email"]', email);
+        await page.type('input[name="password"], input[type="password"]', password);
         
-        const submitBtn = await page.$('button[type="submit"]');
-        if (submitBtn) await submitBtn.click();
+        const submit = await page.$('button[type="submit"]');
+        if (submit) await submit.click();
         
         await page.waitForTimeout(5000);
         
-        // Navigate to My Apps
-        const myAppsLink = await page.$('a[href*="apps"]');
-        if (myAppsLink) await myAppsLink.click();
+        // Get app list or create new
+        const appsLink = await page.$('a[href*="apps"]');
+        if (appsLink) await appsLink.click();
+        await page.waitForTimeout(2000);
         
-        await page.waitForTimeout(3000);
-        
-        // Try to extract keys
-        let clientId = 'NOT_FOUND';
-        let clientSecret = 'NOT_FOUND';
-        
-        try {
-            clientId = await page.$eval('[data-e2e="client-id"], .client-id', el => el.textContent);
-        } catch(e) {}
+        // Try to get existing client ID
+        let clientId = 'MANUAL_REQUIRED';
+        let clientSecret = 'MANUAL_REQUIRED';
         
         try {
-            clientSecret = await page.$eval('[data-e2e="client-secret"], .client-secret', el => el.textContent);
+            const clientIdElem = await page.$('[data-e2e="client-id"], .client-id');
+            if (clientIdElem) clientId = await clientIdElem.evaluate(el => el.textContent);
         } catch(e) {}
         
         await browser.close();
         
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             clientId: clientId,
             clientSecret: clientSecret,
-            message: 'Extraction complete. If keys show NOT_FOUND, please extract manually.'
+            message: 'Check developer.tiktok.com manually for keys if not shown'
         });
         
     } catch (error) {
-        console.error('TikTok error:', error);
         if (browser) await browser.close();
         res.json({ success: false, error: error.message });
     }
 });
 
-// Google Cloud Extraction
-app.post('/api/extract/google', async (req, res) => {
+// Google Extraction
+app.post('/api/google', async (req, res) => {
     const { email, password } = req.body;
+    let browser;
     
     try {
-        console.log('Launching browser for Google...');
-        browser = await puppeteer.launch({ 
-            headless: false,
+        browser = await puppeteer.launch({
+            headless: 'new',
             args: ['--no-sandbox', '--disable-setuid-sandbox']
         });
-        page = await browser.newPage();
         
-        await page.goto('https://console.cloud.google.com/apis/credentials', { waitUntil: 'networkidle2' });
-        
+        const page = await browser.newPage();
+        await page.goto('https://console.cloud.google.com/apis/credentials');
         await page.waitForTimeout(3000);
         
         // Google login
@@ -109,79 +100,42 @@ app.post('/api/extract/google', async (req, res) => {
             await page.waitForTimeout(5000);
         }
         
-        await page.waitForTimeout(3000);
-        
-        // Try to get existing API key
-        let apiKey = 'NOT_FOUND';
-        let clientId = 'NOT_FOUND';
-        let clientSecret = 'NOT_FOUND';
-        
-        try {
-            const apiKeyElement = await page.$('.api-key-value, code');
-            if (apiKeyElement) apiKey = await apiKeyElement.textContent;
-        } catch(e) {}
-        
         await browser.close();
         
-        res.json({ 
-            success: true, 
-            apiKey: apiKey,
-            clientId: clientId,
-            clientSecret: clientSecret,
-            message: 'Google Cloud extraction complete. You may need to create keys manually in the console.'
+        res.json({
+            success: true,
+            message: 'Google login completed. Check console.cloud.google.com for keys.'
         });
         
     } catch (error) {
-        console.error('Google error:', error);
         if (browser) await browser.close();
         res.json({ success: false, error: error.message });
     }
 });
 
-// Meta/Instagram Extraction
-app.post('/api/extract/meta', async (req, res) => {
+// Meta Extraction
+app.post('/api/meta', async (req, res) => {
     const { email, password } = req.body;
+    let browser;
     
     try {
-        console.log('Launching browser for Meta...');
-        browser = await puppeteer.launch({ 
-            headless: false,
+        browser = await puppeteer.launch({
+            headless: 'new',
             args: ['--no-sandbox', '--disable-setuid-sandbox']
         });
-        page = await browser.newPage();
         
-        await page.goto('https://developers.facebook.com', { waitUntil: 'networkidle2' });
-        
-        await page.waitForTimeout(2000);
-        
-        // Click My Apps
-        const myAppsLink = await page.$('a[href*="apps"]');
-        if (myAppsLink) await myAppsLink.click();
-        
+        const page = await browser.newPage();
+        await page.goto('https://developers.facebook.com/apps');
         await page.waitForTimeout(3000);
-        
-        let appId = 'NOT_FOUND';
-        let appSecret = 'NOT_FOUND';
-        
-        try {
-            appId = await page.$eval('[data-testid="app-id"], .app-id', el => el.textContent);
-        } catch(e) {}
-        
-        try {
-            appSecret = await page.$eval('[data-testid="app-secret"], .app-secret', el => el.textContent);
-        } catch(e) {}
         
         await browser.close();
         
-        res.json({ 
-            success: true, 
-            appId: appId,
-            appSecret: appSecret,
-            message: 'Meta extraction complete. If keys show NOT_FOUND, please extract manually.'
+        res.json({
+            success: true,
+            message: 'Meta portal opened. Check developers.facebook.com for keys.'
         });
         
     } catch (error) {
-        console.error('Meta error:', error);
         if (browser) await browser.close();
         res.json({ success: false, error: error.message });
     }
@@ -193,10 +147,5 @@ app.get('/', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`\n✅ Blank Log™ Admin AI running at: http://localhost:${PORT}`);
-    console.log('\n📋 Instructions:');
-    console.log('1. Open your browser to http://localhost:3000');
-    console.log('2. Click each platform button');
-    console.log('3. Enter your email and password when prompted');
-    console.log('4. Copy the extracted keys and send them to your developer\n');
+    console.log(`Server running on port ${PORT}`);
 });
