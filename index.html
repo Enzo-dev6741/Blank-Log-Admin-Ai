@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blank Log - Key Manager</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0a; color: #e0e0e0; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { font-size: 32px; margin-bottom: 8px; }
+        .subtitle { color: #666; margin-bottom: 30px; }
+        .card { background: #111; border: 1px solid #222; border-radius: 16px; padding: 24px; margin-bottom: 20px; }
+        .card h2 { font-size: 20px; margin-bottom: 16px; }
+        .input-group { margin-bottom: 16px; }
+        .input-group label { display: block; font-size: 12px; color: #666; margin-bottom: 6px; }
+        .input-group input { width: 100%; padding: 12px; background: #0a0a0a; border: 1px solid #222; border-radius: 8px; color: white; font-family: monospace; font-size: 13px; }
+        .btn { background: #1a1a1a; border: 1px solid #333; color: white; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 14px; }
+        .btn-primary { background: white; color: black; border: none; }
+        .output { background: #0a0a0a; border-radius: 12px; padding: 16px; font-family: monospace; font-size: 12px; white-space: pre-wrap; margin: 16px 0; border: 1px solid #222; }
+        .copy-btn { background: #1a1a1a; border: 1px solid #333; color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer; width: 100%; }
+        .step { background: #0a0a0a; border-radius: 8px; padding: 12px; margin-bottom: 12px; font-size: 13px; color: #aaa; }
+        .step-number { display: inline-block; background: #1a1a1a; border-radius: 20px; padding: 2px 8px; font-size: 11px; margin-right: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Blank Log Key Manager</h1>
+        <div class="subtitle">Enter your API keys below. They will be saved and can be copied all at once.</div>
+
+        <!-- TikTok -->
+        <div class="card">
+            <h2>🎵 TikTok</h2>
+            <div class="step">
+                <span class="step-number">1</span> Go to <strong>developers.tiktok.com</strong>
+            </div>
+            <div class="step">
+                <span class="step-number">2</span> Click "My Apps" → "Connect a new app"
+            </div>
+            <div class="step">
+                <span class="step-number">3</span> Name it "Blank Log" → Click "Start"
+            </div>
+            <div class="step">
+                <span class="step-number">4</span> Copy the <strong>Client ID</strong> and <strong>Client Secret</strong> below
+            </div>
+            <div class="input-group"><label>Client ID</label><input type="text" id="tiktokId" placeholder="Paste Client ID here"></div>
+            <div class="input-group"><label>Client Secret</label><input type="text" id="tiktokSecret" placeholder="Paste Client Secret here"></div>
+        </div>
+
+        <!-- Google -->
+        <div class="card">
+            <h2>☁️ Google Cloud (YouTube)</h2>
+            <div class="step">
+                <span class="step-number">1</span> Go to <strong>console.cloud.google.com/apis/credentials</strong>
+            </div>
+            <div class="step">
+                <span class="step-number">2</span> Click "+ Create Credentials" → "API Key" → Copy it
+            </div>
+            <div class="step">
+                <span class="step-number">3</span> Click "+ Create Credentials" → "OAuth Client ID"
+            </div>
+            <div class="step">
+                <span class="step-number">4</span> Select "Web application" → Name "Blank Log"
+            </div>
+            <div class="step">
+                <span class="step-number">5</span> Add <strong>https://blank-log.vercel.app</strong> to Authorized origins
+            </div>
+            <div class="step">
+                <span class="step-number">6</span> Click "Create" → Copy Client ID and Secret
+            </div>
+            <div class="input-group"><label>API Key</label><input type="text" id="googleApiKey" placeholder="Paste API Key here"></div>
+            <div class="input-group"><label>Client ID</label><input type="text" id="googleClientId" placeholder="Paste Client ID here"></div>
+            <div class="input-group"><label>Client Secret</label><input type="text" id="googleClientSecret" placeholder="Paste Client Secret here"></div>
+        </div>
+
+        <!-- Meta -->
+        <div class="card">
+            <h2>📸 Meta (Instagram)</h2>
+            <div class="step">
+                <span class="step-number">1</span> Go to <strong>developers.facebook.com</strong>
+            </div>
+            <div class="step">
+                <span class="step-number">2</span> Click "My Apps" → "Create App" → Select "Business"
+            </div>
+            <div class="step">
+                <span class="step-number">3</span> Name "Blank Log" → Click "Create App"
+            </div>
+            <div class="step">
+                <span class="step-number">4</span> Go to "Settings" → "Basic" → Copy <strong>App ID</strong> and <strong>App Secret</strong>
+            </div>
+            <div class="input-group"><label>App ID</label><input type="text" id="metaAppId" placeholder="Paste App ID here"></div>
+            <div class="input-group"><label>App Secret</label><input type="text" id="metaAppSecret" placeholder="Paste App Secret here"></div>
+        </div>
+
+        <!-- Output -->
+        <div class="card">
+            <h2>📋 All Keys (Copy & Send)</h2>
+            <div class="output" id="output">{ "status": "Enter your keys above" }</div>
+            <button class="copy-btn" id="copyBtn">Copy All Keys</button>
+        </div>
+    </div>
+
+    <script>
+        let keys = {
+            tiktok: { id: '', secret: '' },
+            google: { apiKey: '', clientId: '', clientSecret: '' },
+            meta: { appId: '', appSecret: '' }
+        };
+        
+        function updateOutput() {
+            const output = {
+                extractedAt: new Date().toISOString(),
+                tiktok: {
+                    client_id: keys.tiktok.id || "",
+                    client_secret: keys.tiktok.secret || ""
+                },
+                google: {
+                    api_key: keys.google.apiKey || "",
+                    client_id: keys.google.clientId || "",
+                    client_secret: keys.google.clientSecret || ""
+                },
+                meta: {
+                    app_id: keys.meta.appId || "",
+                    app_secret: keys.meta.appSecret || ""
+                }
+            };
+            document.getElementById('output').textContent = JSON.stringify(output, null, 2);
+        }
+        
+        function copyAll() {
+            const output = document.getElementById('output').textContent;
+            navigator.clipboard.writeText(output);
+            alert('Keys copied! Send to your developer.');
+        }
+        
+        // Bind inputs
+        document.getElementById('tiktokId').oninput = (e) => { keys.tiktok.id = e.target.value; updateOutput(); };
+        document.getElementById('tiktokSecret').oninput = (e) => { keys.tiktok.secret = e.target.value; updateOutput(); };
+        document.getElementById('googleApiKey').oninput = (e) => { keys.google.apiKey = e.target.value; updateOutput(); };
+        document.getElementById('googleClientId').oninput = (e) => { keys.google.clientId = e.target.value; updateOutput(); };
+        document.getElementById('googleClientSecret').oninput = (e) => { keys.google.clientSecret = e.target.value; updateOutput(); };
+        document.getElementById('metaAppId').oninput = (e) => { keys.meta.appId = e.target.value; updateOutput(); };
+        document.getElementById('metaAppSecret').oninput = (e) => { keys.meta.appSecret = e.target.value; updateOutput(); };
+        document.getElementById('copyBtn').onclick = copyAll;
+        
+        updateOutput();
+    </script>
+</body>
+</html>
