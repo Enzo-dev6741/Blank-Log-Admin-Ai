@@ -1,0 +1,17 @@
+{
+  "name": "blank-log-admin-ai",
+  "version": "1.0.0",
+  "description": "Blank Log™ Admin AI - Automated API Key Extractor",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "dependencies": {
+    "puppeteer-core": "^22.0.0",
+    "electron": "^28.0.0"
+  },
+  "devDependencies": {
+    "electron-builder": "^24.0.0"
+  }
+}
