@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blank Log™ Admin AI - API Key Extractor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+            border-bottom: 1px solid #2a2a2a;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff 0%, #888888 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #666;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .stat-card .status {
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .status-success { color: #22c55e; }
+        .status-pending { color: #eab308; }
+        .status-error { color: #ef4444; }
+
+        .platform-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+
+        .platform-card {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .platform-header {
+            background: #0f0f0f;
+            padding: 20px;
+            border-bottom: 1px solid #222;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .platform-header .icon {
+            font-size: 32px;
+        }
+
+        .platform-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .platform-body {
+            padding: 20px;
+        }
+
+        .key-row {
+            background: #0a0a0a;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .key-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .key-value {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            color: #22c55e;
+            word-break: break-all;
+        }
+
+        .key-value.placeholder {
+            color: #444;
+            font-style: italic;
+        }
+
+        .btn {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            margin-top: 12px;
+        }
+
+        .btn-primary {
+            background: white;
+            color: black;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: #e0e0e0;
+            transform: translateY(-1px);
+        }
+
+        .log-console {
+            background: #050505;
+            border: 1px solid #1a1a1a;
+            border-radius: 12px;
+            padding: 16px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            height: 250px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            padding: 4px 0;
+            border-bottom: 1px solid #111;
+            font-family: monospace;
+        }
+
+        .log-time {
+            color: #444;
+            margin-right: 12px;
+        }
+
+        .log-info { color: #3b82f6; }
+        .log-success { color: #22c55e; }
+        .log-error { color: #ef4444; }
+        .log-warning { color: #eab308; }
+
+        .output-panel {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .output-panel h3 {
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        .keys-output {
+            background: #0a0a0a;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin-bottom: 12px;
+        }
+
+        .copy-btn {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .copy-btn:hover {
+            background: #2a2a2a;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-content h3 {
+            margin-bottom: 16px;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            background: #0a0a0a;
+            border: 1px solid #222;
+            border-radius: 8px;
+            color: white;
+            margin-bottom: 16px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            margin-left: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>Blank Log™ Admin AI</h1>
+            <p>Automated API Key Extraction Tool | Private Admin Access Only</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>TikTok Status</h3>
+                <div class="value" id="tiktok-status">🔴</div>
+                <div class="status status-pending" id="tiktok-status-text">Not Started</div>
+            </div>
+            <div class="stat-card">
+                <h3>Google Status</h3>
+                <div class="value" id="google-status">🔴</div>
+                <div class="status status-pending" id="google-status-text">Not Started</div>
+            </div>
+            <div class="stat-card">
+                <h3>Meta Status</h3>
+                <div class="value" id="meta-status">🔴</div>
+                <div class="status status-pending" id="meta-status-text">Not Started</div>
+            </div>
+            <div class="stat-card">
+                <h3>Keys Collected</h3>
+                <div class="value" id="keys-count">0</div>
+                <div class="status status-pending" id="keys-status">/ 7 Total</div>
+            </div>
+        </div>
+
+        <div class="platform-grid">
+            <div class="platform-card">
+                <div class="platform-header">
+                    <div class="icon">🎵</div>
+                    <h2>TikTok Developer</h2>
+                </div>
+                <div class="platform-body">
+                    <div class="key-row">
+                        <div class="key-label">Client ID</div>
+                        <div class="key-value placeholder" id="tiktok-client-id">Not extracted yet</div>
+                    </div>
+                    <div class="key-row">
+                        <div class="key-label">Client Secret</div>
+                        <div class="key-value placeholder" id="tiktok-client-secret">Not extracted yet</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="startTikTok()" id="tiktok-btn">Start TikTok Extraction</button>
+                </div>
+            </div>
+
+            <div class="platform-card">
+                <div class="platform-header">
+                    <div class="icon">☁️</div>
+                    <h2>Google Cloud (YouTube)</h2>
+                </div>
+                <div class="platform-body">
+                    <div class="key-row">
+                        <div class="key-label">API Key</div>
+                        <div class="key-value placeholder" id="google-api-key">Not extracted yet</div>
+                    </div>
+                    <div class="key-row">
+                        <div class="key-label">Client ID</div>
+                        <div class="key-value placeholder" id="google-client-id">Not extracted yet</div>
+                    </div>
+                    <div class="key-row">
+                        <div class="key-label">Client Secret</div>
+                        <div class="key-value placeholder" id="google-client-secret">Not extracted yet</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="startGoogle()" id="google-btn">Start Google Extraction</button>
+                </div>
+            </div>
+
+            <div class="platform-card">
+                <div class="platform-header">
+                    <div class="icon">📸</div>
+                    <h2>Meta (Instagram)</h2>
+                </div>
+                <div class="platform-body">
+                    <div class="key-row">
+                        <div class="key-label">App ID</div>
+                        <div class="key-value placeholder" id="meta-app-id">Not extracted yet</div>
+                    </div>
+                    <div class="key-row">
+                        <div class="key-label">App Secret</div>
+                        <div class="key-value placeholder" id="meta-app-secret">Not extracted yet</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="startMeta()" id="meta-btn">Start Meta Extraction</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="log-console" id="log-console">
+            <div class="log-entry">
+                <span class="log-time">[START]</span>
+                <span class="log-info">Blank Log™ Admin AI initialized</span>
+            </div>
+            <div class="log-entry">
+                <span class="log-time">[READY]</span>
+                <span class="log-success">Ready to extract API keys</span>
+            </div>
+        </div>
+
+        <div class="output-panel">
+            <h3>📋 All Extracted Keys (Copy & Send to Developer)</h3>
+            <div class="keys-output" id="keys-output">
+{
+  "status": "Waiting for extraction...",
+  "note": "Click each platform button above to start extraction"
+}
+            </div>
+            <button class="copy-btn" onclick="copyAllKeys()">📋 Copy All Keys</button>
+            <button class="copy-btn" style="margin-left: 10px;" onclick="exportKeys()">💾 Export to File</button>
+        </div>
+    </div>
+
+    <div class="modal" id="password-modal">
+        <div class="modal-content">
+            <h3>🔐 Login Required</h3>
+            <p id="modal-message">Please enter your password to continue</p>
+            <input type="password" id="modal-password" placeholder="Password">
+            <div class="modal-buttons">
+                <button class="btn" onclick="closeModal()">Cancel</button>
+                <button class="btn-primary" onclick="submitPassword()">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let extractedKeys = {
+            tiktok: { clientId: null, clientSecret: null, status: 'pending' },
+            google: { apiKey: null, clientId: null, clientSecret: null, status: 'pending' },
+            meta: { appId: null, appSecret: null, status: 'pending' }
+        };
+
+        let currentModalResolve = null;
+
+        function addLog(message, type = 'info') {
+            const logConsole = document.getElementById('log-console');
+            const time = new Date().toLocaleTimeString();
+            const logClass = type === 'success' ? 'log-success' : type === 'error' ? 'log-error' : type === 'warning' ? 'log-warning' : 'log-info';
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `<span class="log-time">[${time}]</span> <span class="${logClass}">${message}</span>`;
+            logConsole.appendChild(logEntry);
+            logConsole.scrollTop = logConsole.scrollHeight;
+        }
+
+        function updateUI() {
+            if (extractedKeys.tiktok.clientId) {
+                document.getElementById('tiktok-client-id').textContent = extractedKeys.tiktok.clientId;
+                document.getElementById('tiktok-client-id').className = 'key-value';
+                document.getElementById('tiktok-status').innerHTML = '🟢';
+                document.getElementById('tiktok-status-text').textContent = 'Completed';
+                document.getElementById('tiktok-status-text').className = 'status status-success';
+            }
+            if (extractedKeys.tiktok.clientSecret) {
+                document.getElementById('tiktok-client-secret').textContent = extractedKeys.tiktok.clientSecret.substring(0, 20) + '...';
+                document.getElementById('tiktok-client-secret').className = 'key-value';
+            }
+
+            if (extractedKeys.google.apiKey) {
+                document.getElementById('google-api-key').textContent = extractedKeys.google.apiKey;
+                document.getElementById('google-api-key').className = 'key-value';
+            }
+            if (extractedKeys.google.clientId) {
+                document.getElementById('google-client-id').textContent = extractedKeys.google.clientId.substring(0, 40) + '...';
+                document.getElementById('google-client-id').className = 'key-value';
+            }
+            if (extractedKeys.google.clientSecret) {
+                document.getElementById('google-client-secret').textContent = extractedKeys.google.clientSecret.substring(0, 20) + '...';
+                document.getElementById('google-client-secret').className = 'key-value';
+                document.getElementById('google-status').innerHTML = '🟢';
+                document.getElementById('google-status-text').textContent = 'Completed';
+                document.getElementById('google-status-text').className = 'status status-success';
+            }
+
+            if (extractedKeys.meta.appId) {
+                document.getElementById('meta-app-id').textContent = extractedKeys.meta.appId;
+                document.getElementById('meta-app-id').className = 'key-value';
+            }
+            if (extractedKeys.meta.appSecret) {
+                document.getElementById('meta-app-secret').textContent = extractedKeys.meta.appSecret.substring(0, 20) + '...';
+                document.getElementById('meta-app-secret').className = 'key-value';
+                document.getElementById('meta-status').innerHTML = '🟢';
+                document.getElementById('meta-status-text').textContent = 'Completed';
+                document.getElementById('meta-status-text').className = 'status status-success';
+            }
+
+            let count = 0;
+            if (extractedKeys.tiktok.clientId) count++;
+            if (extractedKeys.tiktok.clientSecret) count++;
+            if (extractedKeys.google.apiKey) count++;
+            if (extractedKeys.google.clientId) count++;
+            if (extractedKeys.google.clientSecret) count++;
+            if (extractedKeys.meta.appId) count++;
+            if (extractedKeys.meta.appSecret) count++;
+            document.getElementById('keys-count').textContent = count;
+
+            updateOutputJSON();
+        }
+
+        function updateOutputJSON() {
+            const output = {
+                extractedAt: new Date().toISOString(),
+                tiktok: {
+                    client_id: extractedKeys.tiktok.clientId || "NOT_EXTRACTED_YET",
+                    client_secret: extractedKeys.tiktok.clientSecret || "NOT_EXTRACTED_YET"
+                },
+                google: {
+                    api_key: extractedKeys.google.apiKey || "NOT_EXTRACTED_YET",
+                    client_id: extractedKeys.google.clientId || "NOT_EXTRACTED_YET",
+                    client_secret: extractedKeys.google.clientSecret || "NOT_EXTRACTED_YET"
+                },
+                meta: {
+                    app_id: extractedKeys.meta.appId || "NOT_EXTRACTED_YET",
+                    app_secret: extractedKeys.meta.appSecret || "NOT_EXTRACTED_YET"
+                }
+            };
+            document.getElementById('keys-output').textContent = JSON.stringify(output, null, 2);
+        }
+
+        function copyAllKeys() {
+            const output = document.getElementById('keys-output').textContent;
+            navigator.clipboard.writeText(output);
+            addLog('All keys copied to clipboard!', 'success');
+        }
+
+        function exportKeys() {
+            const output = document.getElementById('keys-output').textContent;
+            const blob = new Blob([output], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `blanklog_keys_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            addLog('Keys exported to file', 'success');
+        }
+
+        function showModal(message) {
+            return new Promise((resolve) => {
+                currentModalResolve = resolve;
+                document.getElementById('modal-message').textContent = message;
+                document.getElementById('password-modal').classList.add('active');
+                document.getElementById('modal-password').value = '';
+            });
+        }
+
+        function closeModal() {
+            document.getElementById('password-modal').classList.remove('active');
+            if (currentModalResolve) {
+                currentModalResolve(null);
+                currentModalResolve = null;
+            }
+        }
+
+        function submitPassword() {
+            const password = document.getElementById('modal-password').value;
+            closeModal();
+            if (currentModalResolve) {
+                currentModalResolve(password);
+                currentModalResolve = null;
+            }
+        }
+
+        async function startTikTok() {
+            addLog('Starting TikTok API key extraction...', 'info');
+            const btn = document.getElementById('tiktok-btn');
+            btn.innerHTML = 'Extracting... <span class="loading"></span>';
+            btn.disabled = true;
+
+            try {
+                const email = await showModal('Enter your TikTok email:');
+                if (!email) { addLog('TikTok extraction cancelled', 'warning'); return; }
+                
+                const password = await showModal('Enter your TikTok password:');
+                if (!password) { addLog('TikTok extraction cancelled', 'warning'); return; }
+
+                addLog('Sending request to server...', 'info');
+                
+                const response = await fetch('/api/extract/tiktok', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    extractedKeys.tiktok.clientId = data.clientId;
+                    extractedKeys.tiktok.clientSecret = data.clientSecret;
+                    addLog(`✅ Client ID: ${data.clientId}`, 'success');
+                    addLog(`✅ Client Secret: ${data.clientSecret.substring(0, 15)}...`, 'success');
+                    addLog(data.message || 'TikTok extraction complete!', 'success');
+                    updateUI();
+                } else {
+                    addLog(`Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addLog(`Error: ${error.message}`, 'error');
+            } finally {
+                btn.innerHTML = 'Start TikTok Extraction';
+                btn.disabled = false;
+            }
+        }
+
+        async function startGoogle() {
+            addLog('Starting Google Cloud API key extraction...', 'info');
+            const btn = document.getElementById('google-btn');
+            btn.innerHTML = 'Extracting... <span class="loading"></span>';
+            btn.disabled = true;
+
+            try {
+                const email = await showModal('Enter your Google email:');
+                if (!email) { addLog('Google extraction cancelled', 'warning'); return; }
+                
+                const password = await showModal('Enter your Google password:');
+                if (!password) { addLog('Google extraction cancelled', 'warning'); return; }
+
+                addLog('Sending request to server...', 'info');
+                
+                const response = await fetch('/api/extract/google', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    extractedKeys.google.apiKey = data.apiKey;
+                    extractedKeys.google.clientId = data.clientId;
+                    extractedKeys.google.clientSecret = data.clientSecret;
+                    if (data.apiKey && data.apiKey !== 'NOT_FOUND') addLog(`✅ API Key: ${data.apiKey}`, 'success');
+                    if (data.clientId && data.clientId !== 'NOT_FOUND') addLog(`✅ Client ID: ${data.clientId.substring(0, 30)}...`, 'success');
+                    if (data.clientSecret && data.clientSecret !== 'NOT_FOUND') addLog(`✅ Client Secret: ${data.clientSecret.substring(0, 15)}...`, 'success');
+                    addLog(data.message || 'Google extraction complete!', 'success');
+                    updateUI();
+                } else {
+                    addLog(`Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addLog(`Error: ${error.message}`, 'error');
+            } finally {
+                btn.innerHTML = 'Start Google Extraction';
+                btn.disabled = false;
+            }
+        }
+
+        async function startMeta() {
+            addLog('Starting Meta/Instagram API key extraction...', 'info');
+            const btn = document.getElementById('meta-btn');
+            btn.innerHTML = 'Extracting... <span class="loading"></span>';
+            btn.disabled = true;
+
+            try {
+                const email = await showModal('Enter your Meta/Facebook email:');
+                if (!email) { addLog('Meta extraction cancelled', 'warning'); return; }
+                
+                const password = await showModal('Enter your Meta/Facebook password:');
+                if (!password) { addLog('Meta extraction cancelled', 'warning'); return; }
+
+                addLog('Sending request to server...', 'info');
+                
+                const response = await fetch('/api/extract/meta', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    extractedKeys.meta.appId = data.appId;
+                    extractedKeys.meta.appSecret = data.appSecret;
+                    if (data.appId && data.appId !== 'NOT_FOUND') addLog(`✅ App ID: ${data.appId}`, 'success');
+                    if (data.appSecret && data.appSecret !== 'NOT_FOUND') addLog(`✅ App Secret: ${data.appSecret.substring(0, 15)}...`, 'success');
+                    addLog(data.message || 'Meta extraction complete!', 'success');
+                    updateUI();
+                } else {
+                    addLog(`Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addLog(`Error: ${error.message}`, 'error');
+            } finally {
+                btn.innerHTML = 'Start Meta Extraction';
+                btn.disabled = false;
+            }
+        }
+
+        window.startTikTok = startTikTok;
+        window.startGoogle = startGoogle;
+        window.startMeta = startMeta;
+        window.copyAllKeys = copyAllKeys;
+        window.exportKeys = exportKeys;
+        window.closeModal = closeModal;
+        window.submitPassword = submitPassword;
+
+        addLog('Admin AI ready. Click any platform button to start extraction.', 'success');
+    </script>
+</body>
+</html>
