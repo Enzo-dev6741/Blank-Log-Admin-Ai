@@ -17,22 +17,20 @@ app.post('/api/tiktok', async (req, res) => {
         console.log('Starting TikTok extraction...');
         
         browser = await puppeteer.launch({
-            headless: 'new',
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
+            headless: true,
+            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
         });
         
         const page = await browser.newPage();
         
-        // Go to TikTok developer
-        await page.goto('https://developers.tiktok.com/apps');
+        await page.goto('https://developers.tiktok.com/apps', { waitUntil: 'networkidle2' });
         await page.waitForTimeout(2000);
         
-        // Click login
         const loginBtn = await page.$('a[href*="login"]');
         if (loginBtn) await loginBtn.click();
         await page.waitForTimeout(2000);
         
-        // Enter credentials
         await page.type('input[name="email"], input[type="email"]', email);
         await page.type('input[name="password"], input[type="password"]', password);
         
@@ -41,12 +39,10 @@ app.post('/api/tiktok', async (req, res) => {
         
         await page.waitForTimeout(5000);
         
-        // Get app list or create new
         const appsLink = await page.$('a[href*="apps"]');
         if (appsLink) await appsLink.click();
         await page.waitForTimeout(2000);
         
-        // Try to get existing client ID
         let clientId = 'MANUAL_REQUIRED';
         let clientSecret = 'MANUAL_REQUIRED';
         
@@ -66,6 +62,7 @@ app.post('/api/tiktok', async (req, res) => {
         
     } catch (error) {
         if (browser) await browser.close();
+        console.error('TikTok error:', error);
         res.json({ success: false, error: error.message });
     }
 });
@@ -77,15 +74,15 @@ app.post('/api/google', async (req, res) => {
     
     try {
         browser = await puppeteer.launch({
-            headless: 'new',
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
+            headless: true,
+            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
         });
         
         const page = await browser.newPage();
-        await page.goto('https://console.cloud.google.com/apis/credentials');
+        await page.goto('https://console.cloud.google.com/apis/credentials', { waitUntil: 'networkidle2' });
         await page.waitForTimeout(3000);
         
-        // Google login
         const emailInput = await page.$('input[type="email"]');
         if (emailInput) {
             await page.type('input[type="email"]', email);
@@ -109,6 +106,7 @@ app.post('/api/google', async (req, res) => {
         
     } catch (error) {
         if (browser) await browser.close();
+        console.error('Google error:', error);
         res.json({ success: false, error: error.message });
     }
 });
@@ -120,12 +118,13 @@ app.post('/api/meta', async (req, res) => {
     
     try {
         browser = await puppeteer.launch({
-            headless: 'new',
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
+            headless: true,
+            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
         });
         
         const page = await browser.newPage();
-        await page.goto('https://developers.facebook.com/apps');
+        await page.goto('https://developers.facebook.com/apps', { waitUntil: 'networkidle2' });
         await page.waitForTimeout(3000);
         
         await browser.close();
@@ -137,6 +136,7 @@ app.post('/api/meta', async (req, res) => {
         
     } catch (error) {
         if (browser) await browser.close();
+        console.error('Meta error:', error);
         res.json({ success: false, error: error.message });
     }
 });
